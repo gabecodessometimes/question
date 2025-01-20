@@ -76,7 +76,7 @@
   <script>
     const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
     const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; 
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycby0ioxgXzclUe3rPegdZ6Nc1oezoibpjA_L5a6GOC2zrlLnG4E04fYaGtME96IBHVRx/exec'; 
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycby4-ZO0Cst0JpGA8Ne3bnk9XL2wM-lsvOWJHl7L5sz_CEVnOAKxgKG6hOyzDXs6Dfu9WQ/exec'; 
 
     $(document).ready(function() {
       fetchQuestions();
@@ -90,20 +90,18 @@
         });
 
         $.ajax({
-          url: scriptUrl,
+          url: 'https://script.google.com/macros/s/AKfycby4-ZO0Cst0JpGA8Ne3bnk9XL2wM-lsvOWJHl7L5sz_CEVnOAKxgKG6hOyzDXs6Dfu9WQ/exec',
           type: 'POST',
           data: JSON.stringify({ responses: responses }),
           contentType: 'application/json',
-          success: function() {
-            console.error('XHR:', xhr);
-            console.error('Status:', status);
-            console.error('Error:', error);
+          success: function () {
             alert('Responses submitted and Doc created successfully!');
           },
-          error: function(xhr, status, error) {
+          error: function (xhr, status, error) {
             alert('Error submitting responses: ' + error + ' (Status: ' + status + ')');
-          }
+          },
         });
+
       });
 
       function fetchQuestions() {
