@@ -71,7 +71,7 @@
         <button type="submit" id="submit">Submit</button>
     </form>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.1/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.24.0/docxtemplater.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -84,7 +84,7 @@
 
             // Function to generate Word document
             function generateWordDocument(responses) {
-                const zip = new PizZip();
+                const zip = new JSZip(); 
                 const doc = new Docxtemplater(zip);
 
                 // Build Word content using responses
