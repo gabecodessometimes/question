@@ -84,8 +84,7 @@
 
             // Function to generate the PDF document
             function generatePdf(responses) {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
+                const doc = new jsPDF(); // jsPDF instance
                 let yOffset = 10;
 
                 responses.forEach((response, index) => {
