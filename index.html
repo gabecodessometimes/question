@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questions from Google Sheets</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="styles.css"> 
+    <style>
+        /* Basic CSS styles for the page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        #questions {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        .response {
+            width: 100%;
+            height: 60px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        #submit {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #submit:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Questions</h1>
+    <div id="questions"></div>
+    <button id="submit">Submit</button>
+
+    <script>
+        const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
+        const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; 
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbxFkOi1LacxrorhCdtPb5C3vmwaQE7OEr84cm5MoSXURbSENzMe3xy2Rns7wZL63Oycxw/exec'; 
+
+        $(document).ready(function() {
+            fetchQuestions();
+
+            $('#submit').click(function() {
+                const responses = [];
+                $('#questions .question').each(function(index) {
+                    const question = $(this).find('p').text();
+                    const response = $(this).find('.response').val();
+                    responses.push({ question, response });
+                });
+
+                $.ajax({
+                    url: scriptUrl,
+                    type: 'POST',
+                    data: JSON.stringify({ responses: responses }),
+                    contentType: 'application/json',
+                    success: function() {
+                        alert('Google Doc created successfully!');
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Error creating Google Doc: ' + error + ' (Status: ' + status + ')'); 
+                    }
+                });
+            });
+
+            function fetchQuestions() {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=${apiKey}`;
+
+                $.getJSON(url, function(data) {
+                    const questions = data.values;
+
+                    if (questions) {
+                        let questionsHtml = '';
+                        questions.forEach((row, index) => {
+                            questionsHtml += `
+                                <div class="question">
+                                    <p>${index + 1}. ${row[0]}</p>
+                                    <textarea class="response" placeholder="Your response here..."></textarea>
+                                </div>`;
+                        });
+                        $('#questions').html(questionsHtml);
+                    } else {
+                        $('#questions').html('<p class="error">No questions found.</p>');
+                    }
+                }).fail(function(jqxhr, textStatus, error) {
+                    const err = textStatus + ", " + error;
+                    $('#questions').html('<p class="error">Error fetching questions: ' + err + '</p>');
+                    console.error("Fetch error:", err);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
