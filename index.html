@@ -71,9 +71,8 @@
         <button type="submit" id="submit">Submit</button>
     </form>
 
-    <!-- Include necessary libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPDF/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include jsPDF from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
         const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
@@ -84,6 +83,8 @@
 
             // Function to generate the PDF document
             function generatePdf(responses) {
+                const { jsPDF } = window.jspdf;  // Access jsPDF properly
+
                 const doc = new jsPDF(); // jsPDF instance
                 let yOffset = 10;
 
