@@ -71,67 +71,80 @@
         <button type="submit" id="submit">Submit</button>
     </form>
 
-    <!-- Include jsPDF from CDN -->
+    <!-- Include jsPDF from CDN to generate PDF files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
         const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
-        const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; // Replace with your actual API key
+        const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; // Replace with your actual Google Sheets API key
 
         $(document).ready(function() {
-            fetchQuestions();
+            fetchQuestions();  // Fetch the questions from Google Sheets when the page loads
 
             // Function to generate the PDF document
             function generatePdf(responses) {
-                const { jsPDF } = window.jspdf;  // Access jsPDF properly
+                // Access jsPDF correctly from window.jspdf
+                const { jsPDF } = window.jspdf; 
 
-                const doc = new jsPDF(); // jsPDF instance
-                let yOffset = 10;
+                // Create a new jsPDF instance
+                const doc = new jsPDF();
+                let yOffset = 10; // Start offset for the text position
 
+                // Loop through each response and add it to the PDF
                 responses.forEach((response, index) => {
-                    doc.text(`Question ${index + 1}:`, 10, yOffset);
-                    yOffset += 10;
-                    doc.text(response, 10, yOffset);
+                    doc.text(`Question ${index + 1}:`, 10, yOffset); // Question title
+                    yOffset += 10; // Adjust position for response text
+                    doc.text(response, 10, yOffset); // The response text
                     yOffset += 20; // Add space before the next question
                 });
 
-                // Save the generated PDF
+                // Save the generated PDF with the name 'responses.pdf'
                 doc.save('responses.pdf');
             }
 
             // Form submit event handler
             $('#submit').click(function(event) {
-                event.preventDefault();
+                event.preventDefault();  // Prevent the default form submission
 
-                const responses = [];
+                const responses = []; // Initialize an empty array to store user responses
+
+                // Loop through each textarea with the class 'response' and collect the user input
                 $('#questions .response').each(function() {
-                    responses.push($(this).val());
+                    responses.push($(this).val());  // Push each response into the responses array
                 });
 
-                generatePdf(responses); // Generate and download the PDF file
+                generatePdf(responses);  // Generate and download the PDF file
             });
 
-            // Fetch questions from Google Sheets
+            // Fetch questions from Google Sheets using the Sheets API
             function fetchQuestions() {
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=${apiKey}`;
 
+                // Make an AJAX request to Google Sheets API
                 $.getJSON(url, function(data) {
-                    const questions = data.values;
+                    const questions = data.values;  // Get the data returned from the API
 
+                    // Check if questions are found in the response
                     if (questions) {
-                        let questionsHtml = '';
+                        let questionsHtml = '';  // Initialize an empty string to store HTML content
+
+                        // Loop through each question from the API response
                         questions.forEach((row, index) => {
                             questionsHtml += `
                                 <div class="question">
-                                    <p>${index + 1}. ${row[0]}</p>
-                                    <textarea class="response" placeholder="Your response here..."></textarea>
+                                    <p>${index + 1}. ${row[0]}</p>  <!-- Display the question -->
+                                    <textarea class="response" placeholder="Your response here..."></textarea> <!-- Textarea for the response -->
                                 </div>`;
                         });
+
+                        // Insert the generated questions HTML into the page
                         $('#questions').html(questionsHtml);
                     } else {
+                        // If no questions are found, show an error message
                         $('#questions').html('<p class="error">No questions found.</p>');
                     }
                 }).fail(function(jqxhr, textStatus, error) {
+                    // Handle error if the API request fails
                     const err = textStatus + ", " + error;
                     $('#questions').html('<p class="error">Error fetching questions: ' + err + '</p>');
                     console.error("Fetch error:", err);
