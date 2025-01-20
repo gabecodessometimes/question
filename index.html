@@ -76,7 +76,7 @@
   <script>
     const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
     const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; 
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyGHdA_-NxD4iAnUycQo5EeQI5fMSS_kBfzMRk-1vt_NA5Pi6ajSLOeeDmEr_pO-bcRzg/exec'; 
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbzvaBnTrVP3PRlbUGhp9IbVEZD6PMyn3zgNX7Gn0GqYs0wYlX8FLKq9KBrtTQmWH0AdTw/exec'; 
 
     $(document).ready(function() {
       fetchQuestions();
@@ -95,6 +95,9 @@
           data: JSON.stringify({ responses: responses }),
           contentType: 'application/json',
           success: function() {
+            console.error('XHR:', xhr);
+            console.error('Status:', status);
+            console.error('Error:', error);
             alert('Responses submitted and Doc created successfully!');
           },
           error: function(xhr, status, error) {
