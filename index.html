@@ -68,14 +68,14 @@
 </head>
 <body>
   <h1>Questions</h1>
-  <div id="questions"></div>
   <form id="questionForm">
+    <div id="questions"></div>
     <button type="submit" id="submit">Submit</button>
   </form>
 
   <script>
     const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
-    const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; 
+    const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpoY'; 
     const scriptUrl = 'https://script.google.com/macros/s/AKfycbxffTAIce1ZGWeXk8eg--mFs2xHZ2DT6TagX4EfMlOueSVapn8pne_hKZIJyK2RH7Sn/exec'; 
 
     $(document).ready(function() {
@@ -85,14 +85,16 @@
         event.preventDefault(); 
 
         const responses = [];
-        $('#questions .response').each(function() {
-          responses.push($(this).val());
+        $('#questions .question').each(function() {
+          const question = $(this).find('p').text(); 
+          const response = $(this).find('textarea').val();
+          responses.push({ question: question, response: response }); 
         });
 
         $.ajax({
           url: scriptUrl,
           type: 'POST',
-          data: JSON.stringify({ responses: responses }),
+          data: JSON.stringify({ responses: responses }), 
           contentType: 'application/json',
           success: function() {
             alert('Responses submitted and Doc created successfully!');
