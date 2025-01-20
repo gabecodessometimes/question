@@ -72,7 +72,7 @@
     </form>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.24.0/docxtemplater.min.js"></script>
+    <script src="https://unpkg.com/mammoth@3.0.12/mammoth.browser.min.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script>
@@ -85,35 +85,41 @@
             // Function to generate Word document
             function generateWordDocument(responses) {
                 const zip = new JSZip(); 
-                const doc = new Docxtemplater(zip);
 
-                // Build Word content using responses
-                const content = `
-                    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-                        <w:body>
-                            ${responses.map((response, index) => `
-                                <w:p>
-                                    <w:r>
-                                        <w:t>Question ${index + 1}:</w:t>
-                                    </w:r>
-                                </w:p>
-                                <w:p>
-                                    <w:r>
-                                        <w:t>${response}</w:t>
-                                    </w:r>
-                                </w:p>
-                            `).join('')}
-                        </w:body>
-                    </w:document>
-                `;
+                // Create the Word document content as HTML
+                const htmlContent = responses.map((response, index) => `
+                    <h3>Question ${index + 1}:</h3>
+                    <p>${response}</p>
+                `).join('');
 
-                doc.setData({ content: content });
+                // Convert HTML to DOCX using mammoth
+                mammoth.convertToHtml(htmlContent)
+                    .then(function(result) {
+                        const { value: html, messages } = result;
 
-                // Generate the Word file
-                const output = doc.getZip().generate({ type: 'blob' });
+                        // Create a document.xml file
+                        const docXml = `
+                            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                            <w:document xmlns:w:="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+                                <w:body>${html}</w:body>
+                            </w:document>
+                        `;
 
-                // Save the file as a .docx
-                saveAs(output, 'responses.docx');
+                        // Create a mainDocument.xml file in the ZIP archive
+                        zip.file('word/document.xml', docXml);
+
+                        // Add other required files for a basic DOCX (relationships, etc.)
+                        // (You can find basic DOCX structure examples online and adapt them)
+
+                        // Generate the Word file
+                        const output = zip.generate({ type: 'blob' });
+
+                        // Save the file as a .docx
+                        saveAs(output, 'responses.docx');
+                    })
+                    .catch(function(err) {
+                        console.error('Error converting to HTML:', err);
+                    });
             }
 
             // Form submit event handler
