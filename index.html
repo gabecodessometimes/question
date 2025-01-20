@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Questions from Google Sheets</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  
 
   <style>
-    /* Basic CSS styles for the page */
     body {
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
@@ -48,7 +46,7 @@
       width: 100%;
       padding: 10px;
       margin-top: 20px;
-      background-color: #007BFF; /* Blue */
+      background-color: #007BFF;
       color: white;
       border: none;
       border-radius: 5px;
@@ -57,7 +55,7 @@
     }
 
     #submit:hover {
-      background-color: #0056b3; /* Darker blue on hover */
+      background-color: #0056b3;
     }
 
     .error {
@@ -73,37 +71,65 @@
     <button type="submit" id="submit">Submit</button>
   </form>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.1/pizzip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.24.0/docxtemplater.min.js"></script>
+
   <script>
-    const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
-    const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; 
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwHpM3j6OYA53iFIj7iNAT-yq-q8qYWF1E9soRqP0Qm22v6AQhSjKa6ROSR4y03VNJ21A/exec'; 
+    const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ';
+    const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo';
 
     $(document).ready(function() {
       fetchQuestions();
 
+      // Function to generate Word document
+      function generateWordDocument(responses) {
+        const PizZip = window.PizZip;
+        const Docxtemplater = window.Docxtemplater;
+
+        const zip = new PizZip();
+        const doc = new Docxtemplater(zip);
+
+        const content = `
+          <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+            <w:body>
+              ${responses.map((response, index) => `
+                <w:p>
+                  <w:r>
+                    <w:t>Question ${index + 1}:</w:t>
+                  </w:r>
+                </w:p>
+                <w:p>
+                  <w:r>
+                    <w:t>${response}</w:t>
+                  </w:r>
+                </w:p>
+              `).join('')}
+            </w:body>
+          </w:document>
+        `;
+
+        doc.setData({ content: content });
+
+        // Generate the Word file
+        const output = doc.getZip().generate({ type: 'blob' });
+
+        // Save the file as a .docx
+        saveAs(output, 'responses.docx');
+      }
+
+      // Form submit event handler
       $('#submit').click(function(event) {
-        event.preventDefault(); 
+        event.preventDefault();
 
         const responses = [];
         $('#questions .response').each(function() {
           responses.push($(this).val());
         });
 
-        $.ajax({
-          url: 'https://script.google.com/macros/s/AKfycbwHpM3j6OYA53iFIj7iNAT-yq-q8qYWF1E9soRqP0Qm22v6AQhSjKa6ROSR4y03VNJ21A/exec',
-          type: 'POST',
-          data: JSON.stringify({ responses: responses }),
-          contentType: 'application/json',
-          success: function () {
-            alert('Responses submitted and Doc created successfully!');
-          },
-          error: function (xhr, status, error) {
-            alert('Error submitting responses: ' + error + ' (Status: ' + status + ')');
-          },
-        });
-
+        generateWordDocument(responses);  // Generate and download the Word file
       });
 
+      // Fetch questions from Google Sheets
       function fetchQuestions() {
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=${apiKey}`;
 
