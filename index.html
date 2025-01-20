@@ -72,8 +72,8 @@
     </form>
 
     <!-- Include necessary libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsPDF/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
@@ -82,70 +82,21 @@
         $(document).ready(function() {
             fetchQuestions();
 
-            // Function to generate the Word document from responses
-            function generateWordDocument(responses) {
-                const zip = new JSZip(); 
+            // Function to generate the PDF document
+            function generatePdf(responses) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let yOffset = 10;
 
-                // Create document.xml (Main content of the document)
-                let docXml = `
-                    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-                        <w:body>
-                            ${responses.map((response, index) => `
-                                <w:p>
-                                    <w:r>
-                                        <w:t>Question ${index + 1}:</w:t>
-                                    </w:r>
-                                </w:p>
-                                <w:p>
-                                    <w:r>
-                                        <w:t>${response}</w:t>
-                                    </w:r>
-                                </w:p>
-                            `).join('')}
-                        </w:body>
-                    </w:document>
-                `;
+                responses.forEach((response, index) => {
+                    doc.text(`Question ${index + 1}:`, 10, yOffset);
+                    yOffset += 10;
+                    doc.text(response, 10, yOffset);
+                    yOffset += 20; // Add space before the next question
+                });
 
-                // Create styles.xml (Basic styles for the document)
-                const stylesXml = `
-                    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                    <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-                        <w:style w:type="paragraph" w:styleId="Normal">
-                            <w:name w:val="Normal"/>
-                            <w:basedOn w:val=""/>
-                            <w:next w:val="Normal"/>
-                            <w:rPr/>
-                            <w:pPr>
-                                <w:ind w:left="0" w:right="0"/>
-                                <w:spacing w:after="200"/>
-                            </w:pPr>
-                        </w:style>
-                    </w:styles>
-                `;
-
-                // Create relationships file (document.xml.rels)
-                const relationshipsXml = `
-                    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-                        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-                    </Relationships>
-                `;
-
-                // Create the required folder structure
-                zip.folder('_rels').file('.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
-                zip.folder('word').file('document.xml', docXml);
-                zip.folder('word').file('styles.xml', stylesXml);
-                zip.folder('word/_rels').file('document.xml.rels', relationshipsXml);
-
-                // Generate the DOCX file as a Blob and trigger download
-                zip.generateAsync({ type: 'blob' })
-                    .then(function(content) {
-                        saveAs(content, 'responses.docx'); // Save the DOCX file
-                    })
-                    .catch(function(error) {
-                        console.error('Error generating DOCX:', error);
-                    });
+                // Save the generated PDF
+                doc.save('responses.pdf');
             }
 
             // Form submit event handler
@@ -157,7 +108,7 @@
                     responses.push($(this).val());
                 });
 
-                generateWordDocument(responses); // Generate and download the Word file
+                generatePdf(responses); // Generate and download the PDF file
             });
 
             // Fetch questions from Google Sheets
