@@ -6,6 +6,7 @@
   <title>Questions from Google Sheets</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   
+
   <style>
     /* Basic CSS styles for the page */
     body {
@@ -75,7 +76,7 @@
   <script>
     const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
     const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; 
-    const proxyUrl = 'question-eight-beryl.vercel.app'; // Proxy server URL
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycby0EKCCwKZrcuESAT4ppXUTHRiEpJ3D3Sat78DBZjV1uM-zDfrpfxCT6cC3-FOWP_oUJQ/exec'; 
 
     $(document).ready(function() {
       fetchQuestions();
@@ -88,9 +89,8 @@
           responses.push($(this).val());
         });
 
-        // Send data to the backend proxy server
         $.ajax({
-          url: proxyUrl, // Your backend server
+          url: 'https://script.google.com/macros/s/AKfycby0EKCCwKZrcuESAT4ppXUTHRiEpJ3D3Sat78DBZjV1uM-zDfrpfxCT6cC3-FOWP_oUJQ/exec',
           type: 'POST',
           data: JSON.stringify({ responses: responses }),
           contentType: 'application/json',
@@ -101,9 +101,9 @@
             alert('Error submitting responses: ' + error + ' (Status: ' + status + ')');
           },
         });
+
       });
 
-      // Fetch questions from Google Sheets
       function fetchQuestions() {
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=${apiKey}`;
 
@@ -113,7 +113,7 @@
           if (questions) {
             let questionsHtml = '';
             questions.forEach((row, index) => {
-              questionsHtml += ` 
+              questionsHtml += `
                 <div class="question">
                   <p>${index + 1}. ${row[0]}</p>
                   <textarea class="response" placeholder="Your response here..."></textarea>
