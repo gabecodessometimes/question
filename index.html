@@ -73,6 +73,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.1/pizzip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.24.0/docxtemplater.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <script>
     const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ';
@@ -83,12 +84,10 @@
 
       // Function to generate Word document
       function generateWordDocument(responses) {
-        const PizZip = window.PizZip;
-        const Docxtemplater = window.Docxtemplater;
-
         const zip = new PizZip();
         const doc = new Docxtemplater(zip);
 
+        // Build Word content using responses
         const content = `
           <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
             <w:body>
