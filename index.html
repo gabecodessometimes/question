@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questions from Google Sheets</title>
+    <title>Customizable Questions System</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: rgb(22, 23, 24);
+            color: white;
             margin: 20px;
         }
 
@@ -18,13 +18,40 @@
             text-align: center;
         }
 
-        #questions {
+        #config, #questions {
             max-width: 600px;
-            margin: 0 auto;
-            background-color: rgb(200, 200, 200);
+            margin: 20px auto;
+            background-color: rgb(37, 37, 42);
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label, input, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: rgb(212, 237, 49);
+            color: rgb(37, 37, 42);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: rgb(147, 165, 32);
         }
 
         .question {
@@ -35,121 +62,133 @@
             width: 100%;
             height: 60px;
             padding: 10px;
-            border: 1px solid rgb(37, 37, 42);
+            border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
             margin-top: 10px;
-        }
-
-        #submit {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-top: 20px;
-            background-color: rgb(212, 237, 49);
-            color: rgb(22, 23, 24);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        #submit:hover {
-            background-color: #0056b3;
         }
 
         .error {
             color: red;
             text-align: center;
         }
+
+        #submit {
+            margin-top: 20px;
+            font-size: 16px;
+            display: none; /* Hide the submit button by default */
+        }
     </style>
 </head>
 <body>
-    <h1>Questions</h1>
-    <div id="questions"></div>
-    <form id="questionForm">
-        <button type="submit" id="submit">Submit</button>
-    </form>
+    <h1>Customizable Questions System</h1>
+
+    <!-- Configuration Section -->
+    <div id="config">
+        <h2>Configure Your Google Sheet</h2>
+        <label for="sheetUrlInput">Google Sheet URL:</label>
+        <input type="text" id="sheetUrlInput" placeholder="Enter your Google Sheet URL">
+
+        <button id="saveConfig">Fetch Questions</button>
+    </div>
+
+    <!-- Questions Section -->
+    <div id="questions">
+        <form id="questionForm">
+            <div id="questionsContainer"></div>
+            <button type="submit" id="submit">Submit</button>
+        </form>
+    </div>
 
     <!-- Include jsPDF from CDN to generate PDF files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
-        const sheetId = '1l_nBHvCnwaRDzMGfq9AS-tzcQ5hbrM2iXa6PbusUlmQ'; 
-        const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; // Replace with your actual Google Sheets API key
+        $(document).ready(function () {
+            const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; // Predefined API Key
 
-        $(document).ready(function() {
-            fetchQuestions();  // Fetch the questions from Google Sheets when the page loads
+            // Save configuration and fetch questions
+            $('#saveConfig').click(function () {
+                const sheetUrl = $('#sheetUrlInput').val().trim();
 
-            // Function to generate the PDF document
-            function generatePdf(responses) {
-                // Access jsPDF correctly from window.jspdf
-                const { jsPDF } = window.jspdf; 
-
-                // Create a new jsPDF instance
-                const doc = new jsPDF();
-                let yOffset = 10; // Start offset for the text position
-
-                // Loop through each response and add it to the PDF
-                responses.forEach((response, index) => {
-                    doc.text(`Question ${index + 1}:`, 10, yOffset); // Question title
-                    yOffset += 10; // Adjust position for response text
-                    doc.text(response, 10, yOffset); // The response text
-                    yOffset += 20; // Add space before the next question
-                });
-
-                // Save the generated PDF with the name 'responses.pdf'
-                doc.save('responses.pdf');
-            }
-
-            // Form submit event handler
-            $('#submit').click(function(event) {
-                event.preventDefault();  // Prevent the default form submission
-
-                const responses = []; // Initialize an empty array to store user responses
-
-                // Loop through each textarea with the class 'response' and collect the user input
-                $('#questions .response').each(function() {
-                    responses.push($(this).val());  // Push each response into the responses array
-                });
-
-                generatePdf(responses);  // Generate and download the PDF file
+                if (sheetUrl) {
+                    const sheetId = extractSheetId(sheetUrl);
+                    if (sheetId) {
+                        fetchQuestions(sheetId, apiKey); // Fetch questions using the extracted Sheet ID
+                    } else {
+                        alert('Invalid Google Sheet URL. Please provide a valid URL.');
+                    }
+                } else {
+                    alert('Please enter the Google Sheet URL.');
+                }
             });
 
-            // Fetch questions from Google Sheets using the Sheets API
-            function fetchQuestions() {
+            // Extract the Sheet ID from the URL
+            function extractSheetId(url) {
+                const regex = /\/d\/([a-zA-Z0-9-_]+)\/edit/;
+                const match = url.match(regex);
+                return match ? match[1] : null;
+            }
+
+            // Fetch questions from Google Sheets
+            function fetchQuestions(sheetId, apiKey) {
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=${apiKey}`;
 
-                // Make an AJAX request to Google Sheets API
-                $.getJSON(url, function(data) {
-                    const questions = data.values;  // Get the data returned from the API
+                $.getJSON(url, function (data) {
+                    const questions = data.values;
 
-                    // Check if questions are found in the response
                     if (questions) {
-                        let questionsHtml = '';  // Initialize an empty string to store HTML content
-
-                        // Loop through each question from the API response
+                        let questionsHtml = '';
                         questions.forEach((row, index) => {
                             questionsHtml += `
                                 <div class="question">
-                                    <p>${index + 1}. ${row[0]}</p>  <!-- Display the question -->
-                                    <textarea class="response" placeholder="Your response here..."></textarea> <!-- Textarea for the response -->
+                                    <p>${index + 1}. ${row[0]}</p>
+                                    <textarea class="response" placeholder="Your response here..."></textarea>
                                 </div>`;
                         });
-
-                        // Insert the generated questions HTML into the page
-                        $('#questions').html(questionsHtml);
+                        $('#questionsContainer').html(questionsHtml);
+                        $('#submit').show(); // Show the submit button after questions load
                     } else {
-                        // If no questions are found, show an error message
-                        $('#questions').html('<p class="error">No questions found.</p>');
+                        $('#questionsContainer').html('<p class="error">No questions found.</p>');
                     }
-                }).fail(function(jqxhr, textStatus, error) {
-                    // Handle error if the API request fails
-                    const err = textStatus + ", " + error;
-                    $('#questions').html('<p class="error">Error fetching questions: ' + err + '</p>');
-                    console.error("Fetch error:", err);
+                }).fail(function (jqxhr, textStatus, error) {
+                    const err = textStatus + ', ' + error;
+                    $('#questionsContainer').html('<p class="error">Error fetching questions: ' + err + '</p>');
+                    console.error('Fetch error:', err);
                 });
             }
+
+            // Generate a PDF file with responses
+            function generatePdf(responses) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let yOffset = 10;
+
+                responses.forEach((response, index) => {
+                    if (yOffset > 270) {
+                        doc.addPage();
+                        yOffset = 10;
+                    }
+                    doc.text(`Question ${index + 1}:`, 10, yOffset);
+                    yOffset += 10;
+                    doc.text(response, 10, yOffset);
+                    yOffset += 20;
+                });
+
+                doc.save('responses.pdf');
+            }
+
+            // Handle form submission
+            $('#questionForm').submit(function (event) {
+                event.preventDefault();
+                const responses = [];
+
+                $('#questionsContainer .response').each(function () {
+                    responses.push($(this).val());
+                });
+
+                generatePdf(responses);
+            });
         });
     </script>
 </body>
