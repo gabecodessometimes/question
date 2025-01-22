@@ -106,15 +106,14 @@
     <script>
         $(document).ready(function () {
             const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; // Predefined API Key
-
-            // Save configuration and fetch questions
+    
             $('#saveConfig').click(function () {
                 const sheetUrl = $('#sheetUrlInput').val().trim();
-
+    
                 if (sheetUrl) {
                     const sheetId = extractSheetId(sheetUrl);
                     if (sheetId) {
-                        fetchQuestions(sheetId, apiKey); // Fetch questions using the extracted Sheet ID
+                        fetchQuestions(sheetId, apiKey);
                     } else {
                         alert('Invalid Google Sheet URL. Please provide a valid URL.');
                     }
@@ -122,72 +121,76 @@
                     alert('Please enter the Google Sheet URL.');
                 }
             });
-
-            // Extract the Sheet ID from the URL
+    
             function extractSheetId(url) {
                 const regex = /\/d\/([a-zA-Z0-9-_]+)\/edit/;
                 const match = url.match(regex);
                 return match ? match[1] : null;
             }
-
-            // Fetch questions from Google Sheets
+    
             function fetchQuestions(sheetId, apiKey) {
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=${apiKey}`;
-
+    
                 $.getJSON(url, function (data) {
                     const questions = data.values;
-
+                    let questionsHtml = `
+                        <div class="question">
+                            <p>Client</p>
+                            <textarea class="response" placeholder="Enter your name or client name here..."></textarea>
+                        </div>
+                    `; // Add the "Client" question first
+    
                     if (questions) {
-                        let questionsHtml = '';
                         questions.forEach((row, index) => {
                             questionsHtml += `
                                 <div class="question">
-                                    <p>${index + 1}. ${row[0]}</p>
+                                    <p>${row[0]}</p>
                                     <textarea class="response" placeholder="Your response here..."></textarea>
                                 </div>`;
                         });
-                        $('#questionsContainer').html(questionsHtml);
-                        $('#submit').show(); // Show the submit button after questions load
                     } else {
-                        $('#questionsContainer').html('<p class="error">No questions found.</p>');
+                        questionsHtml += '<p class="error">No questions found.</p>';
                     }
+    
+                    $('#questionsContainer').html(questionsHtml);
+                    $('#submit').show();
                 }).fail(function (jqxhr, textStatus, error) {
                     const err = textStatus + ', ' + error;
                     $('#questionsContainer').html('<p class="error">Error fetching questions: ' + err + '</p>');
                     console.error('Fetch error:', err);
                 });
             }
-
-            // Generate a PDF file with responses
-            function generatePdf(responses) {
+    
+            function generatePdf(questionResponsePairs) {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 let yOffset = 10;
-
-                responses.forEach((response, index) => {
+    
+                questionResponsePairs.forEach(([question, response]) => {
                     if (yOffset > 270) {
                         doc.addPage();
                         yOffset = 10;
                     }
-                    doc.text(`Question ${index + 1}:`, 10, yOffset);
+                    doc.text(question, 10, yOffset);
                     yOffset += 10;
                     doc.text(response, 10, yOffset);
                     yOffset += 20;
                 });
-
+    
                 doc.save('responses.pdf');
             }
-
-            // Handle form submission
+    
             $('#questionForm').submit(function (event) {
                 event.preventDefault();
-                const responses = [];
-
-                $('#questionsContainer .response').each(function () {
-                    responses.push($(this).val());
+                const questionResponsePairs = [];
+    
+                $('#questionsContainer .question').each(function () {
+                    const question = $(this).find('p').text().trim();
+                    const response = $(this).find('.response').val().trim();
+                    questionResponsePairs.push([question, response]);
                 });
-
-                generatePdf(responses);
+    
+                generatePdf(questionResponsePairs);
             });
         });
     </script>
