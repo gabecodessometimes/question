@@ -18,6 +18,17 @@
             text-align: center;
         }
 
+        #logoContainer {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #logoContainer img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 8px;
+        }
+
         #config, #questions {
             max-width: 600px;
             margin: 20px auto;
@@ -83,6 +94,11 @@
 <body>
     <h1>Customizable Questions System</h1>
 
+    <!-- Logo Section -->
+    <div id="logoContainer">
+        <img id="logo" src="https://cdn.theorg.com/0813ba63-8b7d-43fa-a58e-d1cd59e247d2_thumb.jpg" alt="Company Logo">
+    </div>
+
     <!-- Configuration Section -->
     <div id="config">
         <h2>Configure Your Google Sheet</h2>
@@ -106,10 +122,10 @@
     <script>
         $(document).ready(function () {
             const apiKey = 'AIzaSyCtNkQn6rpJkol603f5cLF0nUHItDdRKpo'; // Predefined API Key
-    
+
             $('#saveConfig').click(function () {
                 const sheetUrl = $('#sheetUrlInput').val().trim();
-    
+
                 if (sheetUrl) {
                     const sheetId = extractSheetId(sheetUrl);
                     if (sheetId) {
@@ -121,16 +137,16 @@
                     alert('Please enter the Google Sheet URL.');
                 }
             });
-    
+
             function extractSheetId(url) {
                 const regex = /\/d\/([a-zA-Z0-9-_]+)\/edit/;
                 const match = url.match(regex);
                 return match ? match[1] : null;
             }
-    
+
             function fetchQuestions(sheetId, apiKey) {
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=${apiKey}`;
-    
+
                 $.getJSON(url, function (data) {
                     const questions = data.values;
                     let questionsHtml = `
@@ -139,7 +155,7 @@
                             <textarea class="response" placeholder="Enter your name or client name here..."></textarea>
                         </div>
                     `; // Add the "Client" question first
-    
+
                     if (questions) {
                         questions.forEach((row, index) => {
                             questionsHtml += `
@@ -151,7 +167,7 @@
                     } else {
                         questionsHtml += '<p class="error">No questions found.</p>';
                     }
-    
+
                     $('#questionsContainer').html(questionsHtml);
                     $('#submit').show();
                 }).fail(function (jqxhr, textStatus, error) {
@@ -160,12 +176,12 @@
                     console.error('Fetch error:', err);
                 });
             }
-    
+            
             function generatePdf(questionResponsePairs) {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 let yOffset = 10;
-    
+
                 questionResponsePairs.forEach(([question, response]) => {
                     if (yOffset > 270) {
                         doc.addPage();
@@ -176,20 +192,20 @@
                     doc.text(response, 10, yOffset);
                     yOffset += 20;
                 });
-    
+
                 doc.save('responses.pdf');
             }
-    
+
             $('#questionForm').submit(function (event) {
                 event.preventDefault();
                 const questionResponsePairs = [];
-    
+
                 $('#questionsContainer .question').each(function () {
                     const question = $(this).find('p').text().trim();
                     const response = $(this).find('.response').val().trim();
                     questionResponsePairs.push([question, response]);
                 });
-    
+
                 generatePdf(questionResponsePairs);
             });
         });
